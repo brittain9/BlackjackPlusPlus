@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="card.cpp">
+      <Filter>card</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>pch</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="blackjack.cpp">
+      <Filter>game</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="card.h">
+      <Filter>card</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>pch</Filter>
+    </ClInclude>
+    <ClInclude Include="rng.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="timer.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="blackjack.h">
+      <Filter>game</Filter>
+    </ClInclude>
+    <ClInclude Include="settings.h">
+      <Filter>game</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="pch">
+      <UniqueIdentifier>{51a6ea9a-47c1-4f4f-ac06-6ed54544951a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="card">
+      <UniqueIdentifier>{9f1330b5-b5cc-4dc5-8823-45e482768b06}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="headers">
+      <UniqueIdentifier>{c6b0eed5-8ecd-4d88-ad0a-3c2cd9816c5c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source">
+      <UniqueIdentifier>{badcd67c-d1ab-4311-8569-eac910e40f35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="game">
+      <UniqueIdentifier>{2c7f5d1b-38f3-4d17-89b7-008aaf618aec}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

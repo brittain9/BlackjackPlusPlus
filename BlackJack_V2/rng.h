@@ -5,7 +5,7 @@
 
 // Same rng() and algorithms I made in my Console RPG Simulation Game. Refactored test algorithms into 1 function. Also put everything to header file.
 
-unsigned int rng()
+static unsigned int rng()
 {
 	// Top performing simple random number generator
 	std::random_device dev;
@@ -14,7 +14,7 @@ unsigned int rng()
 	return dist(rng);
 }
 
-void testRandomNumberGeneration(int testSize, int distributionSize, bool printNumbers = false)
+static void testRandomNumberGeneration(int testSize, int distributionSize, bool printNumbers = false)
 {
 	// First checks for duplicates in testSize, then distribtion of numbers. Optional printNumbers flag if you want to see numbers to test algorithm output.
 	// how evenly distributed the numbers will be when I modulo the rng() return by a specific number, distributionSize.
@@ -95,5 +95,6 @@ void testRandomNumberGeneration(int testSize, int distributionSize, bool printNu
 	{
 		printf("\tNumber:\t%u\t%.2f\t%%\n", distribVec[i][0], ((float)distribVec[i][1] / testSize) * 100.0);
 	}
-	printf("\n\tSize of set : % i\t\tDuplicates: % i\n", testSize, dupes);
+	printf("\n\tTest Size: %i\t\tDuplicates: % i\n", testSize, dupes);
 }
+

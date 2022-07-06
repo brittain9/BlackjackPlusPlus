@@ -3,3 +3,9 @@
 ################################################################################
 
 /.vs/BlackJack_V2
+/.vs/BlackjackLearnCPP/v17
+/BlackJack_V2/Debug
+/BlackJack_V2/Release
+/Debug
+/Release
+*.user
