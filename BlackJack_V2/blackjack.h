@@ -32,18 +32,19 @@ public:
 	void incDealerWins() { m_dealerWins++; }
 	void incPush() { m_pushes++; }
 
-	// These are methods because we need access to bank
+
 	void bet();
 	int handleBlackjacks(Player* playerPtr, Dealer* dealerPtr, bool betsOn);
-	void getPlayerInput(Player* playerPtr, deck_t* deck, bool betsOn);
+	void getPlayerInput(deck_t& playerhand, deck_t* deck, bool betsOn);
+
+	void Split(deck_t* deckPtr,deck_t& handToSplit, bool betsOn, int prevBet = 0, int iteration = 0);
 
 	void printBet();
 };
 
 void printHand(HandInterface* hand);
 bool playAgain();
-int whoWon(Player* playerPtr, Dealer* dealerPtr);
-inline bool isSplittable(Player* hand); // dealer cant split.
+int whoWon(deck_t& playerHand, Dealer* dealerPtr);
 
 template<typename T>
 T getInput(std::string message);

@@ -14,7 +14,6 @@ typedef std::vector<Card> deck_t;
 
 //Declarations
 deck_t _makeDeck(int numDecks = DEFAULT_NUM_DECKS);
-deck_t* allocateDeck(int numDecks = DEFAULT_NUM_DECKS);
 
 void shuffleDeck(deck_t* deck);
 
@@ -61,6 +60,14 @@ public:
 	Card(rank_t r, suit_t s)
 		: rank(r), suit(s) {}
 
+	Card& operator=(const Card& card1)
+	{
+		rank = card1.rank;
+		suit = card1.suit;
+
+		return *this;
+	}
+
 	friend deck_t _makeDeck(int numDecks);
 	friend void printCard(const Card& card);
 	friend void printCard(Card* card);
@@ -73,12 +80,20 @@ public:
 void printCard(const Card& card);
 void printCard(Card* card);
 
+// Had to make a lot of methods I had also into functions taking a hand for splitting
+static bool isSplittable(deck_t hand) { return hand[0].rankNumber() == hand[1].rankNumber(); }
+void drawCard( deck_t* deck, deck_t* hand);
+void showGameHand(const deck_t& hand);
+int getHandValue(deck_t hand);
+bool checkBust(deck_t hand);
+
+
 class HandInterface
 {
 protected:
 	deck_t hand;
 public:
-	deck_t getHand() { return hand; }
+	deck_t& getHand() { return hand; }
 	int getHandValue();
 
 	bool checkBust(); // Return true if busted
@@ -141,8 +156,8 @@ public:
 
 	std::string classString() override { return "Player"; };
 
-	bool isSplittable() {return hand[0].rankNumber() == hand[1].rankNumber();}
-
-	void split();
-
+	void setHand(deck_t newHand)
+	{
+		hand = newHand;
+	}
 };

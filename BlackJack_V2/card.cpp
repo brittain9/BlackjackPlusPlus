@@ -142,6 +142,11 @@ void printCard(Card* card)
 	}
 }
 
+void showGameHand(const deck_t& hand)
+{
+	printDeck(&hand);
+}
+
 
 void printDeck(const deck_t* deck)
 {
@@ -154,11 +159,33 @@ void printDeck(const deck_t* deck)
 	std::cout << '\n';
 }
 
+void drawCard(deck_t* deck, deck_t* hand)
+{
+	hand->push_back(getCardFromTop(deck));
+}
+
 inline void HandInterface::drawCard(deck_t* deck)
 {
 	hand.push_back(getCardFromTop(deck));
 }
 
+int getHandValue(deck_t hand)
+{
+	int value{ 0 };
+	bool hasAce = false;
+	for (Card Card : hand)
+	{
+		value += Card.rankValue();
+		if (Card.rankValue() == 1)
+		{
+			// if has ace in hand
+			hasAce = true;
+		}
+	}
+	if (hasAce && (value + ACE_ADDITONAL_VALUE) <= BUST_NUMBER)
+		value += ACE_ADDITONAL_VALUE;
+	return value;
+}
 
 int HandInterface::getHandValue()
 {
@@ -188,6 +215,14 @@ bool HandInterface::checkBlackJack()
 	return false;
 
 }
+
+bool checkBust(deck_t hand)
+{
+	if (getHandValue(hand) > BUST_NUMBER)
+		return true;
+	return false;
+
+}
 bool HandInterface::checkBust()
 {
 	// Return true if busted, false if not
@@ -201,12 +236,13 @@ bool Dealer::AI(deck_t* deck)
 {
 	// Return true if dealer busts, false if not.
 
+	printf("\n\tDealer hand: ");
 	showFullHand();
 	while(true)
 	{
 		if (checkBust())
 			return true;
-		if (getHandValue() > DEALER_STAND)
+		if (getHandValue() >= DEALER_STAND)
 		{
 			// if not busted, and over stand #.
 			printf("\nDealer stands.\n");
@@ -214,7 +250,7 @@ bool Dealer::AI(deck_t* deck)
 		}
 	
 		drawCard(deck);
-		printf("\tDealer hand: ");
+		printf("\n\tDealer hand: ");
 		showFullHand();
 		std::cout << "\tDealer hand value : " << getHandValue() << '\n';
 		
@@ -263,11 +299,6 @@ deck_t _makeDeck(int numDecks)
 	
 	return deck;
 }
-deck_t* allocateDeck(int numDecks)
-{
-	deck_t* returnDeckPtr{ new deck_t (_makeDeck(numDecks))};
-	return returnDeckPtr;
-}
 
 void shuffleDeck(deck_t* deck)
 {
@@ -280,9 +311,4 @@ Card getCardFromTop(deck_t* deck)
 	Card returnCard = deck->at(0); // return first card from deck.
 	deck->erase(deck->begin()); // remove that card from deck
 	return returnCard; // After player is done with the card, card should be added back to deck. Then next turn deck reshuffled.
-}
-
-void Player::split()
-{
-	
 }

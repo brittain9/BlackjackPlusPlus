@@ -22,11 +22,10 @@ enum choices
 
 void BlackJack::Blackjack(int decks, bool betsOn)
 {
-	// create deck, and keep track of deck. Main loop goes here.
-	// if all cards in the deck are used. A new deck will be created and shuffled. Trying to simulate real life using a whole deck instead of creating a new shuffled deck each time.
+	// create deck, players, and keep track of deck, stats, and bank. Main loop goes here.
 
 	// Create deck and players.
-	deck_t* deckPtr = allocateDeck(decks);
+	deck_t* deckPtr{ new deck_t(_makeDeck(decks)) };
 
 	shuffleDeck(deckPtr);
 
@@ -99,7 +98,7 @@ void BlackJack::Blackjack(int decks, bool betsOn)
 		if(deckPtr->size() < 4)
 		{
 			delete deckPtr; // delete old deck
-			deckPtr = allocateDeck(decks); // allocate new deck
+			deckPtr = new deck_t(_makeDeck(decks));
 			printf("\nCreated new deck.\n");
 			shuffleDeck(deckPtr); // shuffle deck and play more
 		}
@@ -112,18 +111,16 @@ void BlackJack::Blackjack(int decks, bool betsOn)
 
 int BlackJack::playBlackJack(Player* playerPtr, Dealer* dealerPtr, deck_t* deckPtr, bool betsOn)
 {
-	// Returns 0 if player wins , 1 if dealer wins, 2 if draw
+	// Returns outcome as an int defined in outcomes enum.
 
 	playerPtr->clearHand();
 	dealerPtr->clearHand();
-
 	
 	if(betsOn)
 	{
 		printf("\nTotal Bank: $%i\n", m_bank);
 		bet();
 	}
-		
 
 	playerPtr->setStartingHand(deckPtr);
 	dealerPtr->setStartingHand(deckPtr);
@@ -134,13 +131,12 @@ int BlackJack::playBlackJack(Player* playerPtr, Dealer* dealerPtr, deck_t* deckP
 	if(betsOn)
 		printBet();
 
-
 	if (int winner = handleBlackjacks(playerPtr, dealerPtr, betsOn))
 		// returns 0 if no blackjacks
 		return winner; 
 
-	getPlayerInput(playerPtr, deckPtr, betsOn);
-	if(playerPtr->checkBust())
+	getPlayerInput( playerPtr->getHand(), deckPtr, betsOn);
+	if(checkBust(playerPtr->getHand()))
 	{
 		printf("\nPlayer busted\n");
 		return DEALER_WINS;
@@ -153,7 +149,7 @@ int BlackJack::playBlackJack(Player* playerPtr, Dealer* dealerPtr, deck_t* deckP
 		return PLAYER_WINS;
 	}
 
-	return whoWon(playerPtr,dealerPtr);
+	return whoWon(playerPtr->getHand(),dealerPtr);
 }
 
 void printHand(HandInterface* hand)
@@ -162,7 +158,7 @@ void printHand(HandInterface* hand)
 	printf("\n\t%s hand:\t", hand->classString().c_str());
 	hand->showGameHand();
 }
-void BlackJack::printBet() { printf("\nTotal Bet: $%i\n", m_bet); }
+
 void BlackJack::bet()
 {
 	while(true)
@@ -202,6 +198,8 @@ void BlackJack::bet()
 	m_lastBet = m_bet;
 }
 
+void BlackJack::printBet() { printf("\nTotal Bet: $%i\n", m_bet); }
+
 int BlackJack::handleBlackjacks(Player* playerPtr, Dealer* dealerPtr, bool betsOn)
 {
 	// Return 0 if no blackJacks. 1 if player, 2 if dealer, 3 if draw
@@ -234,7 +232,7 @@ int BlackJack::handleBlackjacks(Player* playerPtr, Dealer* dealerPtr, bool betsO
 	return 0;
 }
 
-void BlackJack::getPlayerInput(Player* playerPtr, deck_t* deckPtr, bool betsOn)
+void BlackJack::getPlayerInput(deck_t& playerhand, deck_t* deckPtr, bool betsOn)
 {
 	printf("\nPlayers turn.    ");
 	int choice{ 0 };
@@ -243,7 +241,7 @@ void BlackJack::getPlayerInput(Player* playerPtr, deck_t* deckPtr, bool betsOn)
 		printf("Enter 1 to stand    Enter 2 to hit    ");
 		if (betsOn)
 			printf("Enter 3 to double down    ");
-		if (playerPtr->isSplittable())
+		if (isSplittable(playerhand))
 			printf("Enter 4 to split    ");
 
 		choice = getInput<int>("Decision: ");
@@ -251,15 +249,16 @@ void BlackJack::getPlayerInput(Player* playerPtr, deck_t* deckPtr, bool betsOn)
 		switch (choice)
 		{
 		case STAND:
-			printf("\tPlayer Stands.\n\n");
+			printf("\n\tPlayer Stands.\n\n");
 			return;
 		case HIT:
-			playerPtr->drawCard(deckPtr);
-			playerPtr->showGameHand();
-			printf("\n\tPlayer hand value: %i\n", playerPtr->getHandValue());
-			if (playerPtr->checkBust())
+			drawCard(deckPtr, &playerhand); // had to change this for split
+			printf("\n\tPlayer hand: ");
+			showGameHand(playerhand); // split change
+			printf("\n\tPlayer hand value: %i\n", getHandValue(playerhand));
+			if (checkBust(playerhand))
 				return;
-			if (playerPtr->getHandValue() == BUST_NUMBER) // 21
+			if (getHandValue(playerhand) == BUST_NUMBER) // 21
 				return; // why do you want to hit if you have 21.
 			continue;
 		case DOUBLE_DOWN:
@@ -269,12 +268,13 @@ void BlackJack::getPlayerInput(Player* playerPtr, deck_t* deckPtr, bool betsOn)
 				continue;
 			}
 			m_bet *= 2;
-			playerPtr->drawCard(deckPtr);
-			playerPtr->showGameHand();
-			printf("\n\tPlayer hand value: %i\n", playerPtr->getHandValue());
+			drawCard( deckPtr, &playerhand);
+			printf("\n\tPlayer hand: ");
+			showGameHand(playerhand);
+			printf("\n\tPlayer hand value: %i\n", getHandValue(playerhand));
 			return;
 		case SPLIT:
-			if (!playerPtr->isSplittable())
+			if (!isSplittable(playerhand))
 			{
 				printf("You weren't even given the option to split this hand.");
 				continue;
@@ -288,16 +288,43 @@ void BlackJack::getPlayerInput(Player* playerPtr, deck_t* deckPtr, bool betsOn)
 	while (true);
 }
 
-int whoWon(Player* playerPtr, Dealer* dealerPtr)
+void BlackJack::Split( deck_t* deckPtr ,deck_t& initialHand, bool betsOn, int prevBet, int iteration ) // we can split up to three times so we want to take in the players starting hand and be able to pass in split hands to split
 {
-	if (playerPtr->getHandValue() > dealerPtr->getHandValue())
-		// player wins
-		return 0;
-	if (dealerPtr->getHandValue() > playerPtr->getHandValue())
-		//dealer wins
-		return 1;
-	// if draw
-	return 2;
+	// this function is annoying because I have structured the classes for 1 hand and 1 bet, yet splitting you can have 4 hands and 4 bets... I also can't easily handle the bets the same way as I have been before.
+
+	// we've already checked if hand is splittable.
+	if (betsOn && m_bank < (m_bet * 2 + prevBet * iteration))
+	{
+		// can player afford split.
+		printf("\tYou're too poor to split.\n");
+		return;
+	}
+
+	// set up splitHand
+	deck_t splitHand;
+	splitHand.reserve(sizeof(Card) * 2);
+	splitHand[0] = initialHand[1]; // set first card to second card of initialHand
+	splitHand[1] = getCardFromTop(deckPtr); // set second card to next card from deck. Hit.
+
+	// set up initialHand
+	initialHand[1] = getCardFromTop(deckPtr); // set second card in initial hand to next card from deck. Hit.
+
+	// At this point. Both of our hands are set up.
+	/*Cases and considerations:
+	 * if we split ace, we can only hit once. https://www.casinocitytimes.com/alan-krigman/article/in-blackjack-why-can-you-only-hit-aces-once-after-a-split-62324
+	 * we need to see if either hand can be split again.
+	 * we need t
+	 */
+	
+}
+
+int whoWon(deck_t& playerHand, Dealer* dealerPtr)
+{
+	if (getHandValue(playerHand )> dealerPtr->getHandValue())
+		return PLAYER_WINS;
+	if (dealerPtr->getHandValue() > getHandValue(playerHand))
+		return DEALER_WINS;
+	return PUSH;
 }
 
 bool playAgain()
