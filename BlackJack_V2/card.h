@@ -2,19 +2,30 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include "rng.h"
 #include "settings.h"
 
+class HandInterface;
 class Player;
 class Dealer;
 class Card;
 
-
+//Typedefs
 typedef std::vector<Card> deck_t;
-typedef std::unique_ptr<deck_t> deckPtr_t;
-typedef std::unique_ptr<Dealer> dealerPtr_t;
-typedef std::unique_ptr<Player> playerPtr_T;
 
+//Declarations
+deck_t _makeDeck(int numDecks = DEFAULT_NUM_DECKS);
+deck_t* allocateDeck(int numDecks = DEFAULT_NUM_DECKS);
+
+void shuffleDeck(deck_t* deck);
+
+
+void printDeck(const deck_t* deck);
+
+
+Card getCardFromTop(deck_t* deck);
+deck_t& createStartHand(deck_t* deck);
+
+// Classes
 class Card
 {
 private:
@@ -52,75 +63,57 @@ public:
 
 	friend deck_t _makeDeck(int numDecks);
 	friend void printCard(const Card& card);
+	friend void printCard(Card* card);
 
 	std::string suitString();
-	constexpr int rankValue();
+	constexpr int rankValue(); 
+	int rankNumber(); // differentiates between 10, Jack, Queen, King
 };
 
-deck_t _makeDeck(int numDecks = DEFAULT_NUM_DECKS);
-deckPtr_t allocateDeck(int numDecks = DEFAULT_NUM_DECKS);
-dealerPtr_t allocateDealer(deck_t* deck);
-playerPtr_T allocatePlayer(deck_t* deck);
-
-
-void shuffleDeck(deck_t* deck);
-
 void printCard(const Card& card);
-void printDeck(const deck_t* deck);
-void printDeck(deck_t& deck);
-
-const Card& getCardFromTop(deck_t* deck);
+void printCard(Card* card);
 
 class HandInterface
 {
 protected:
 	deck_t hand;
-	bool isBusted = false;
 public:
-	// Dealer and Player both subclasses of HandInterface. Automatically when constructed they will be given a hand.
-	HandInterface(deck_t* deck) : hand({ getCardFromTop(deck), getCardFromTop(deck) }) {}
-
-	// Getter for hand
 	deck_t getHand() { return hand; }
-	bool Busted()
-	{
-		return isBusted;
-	}
-
 	int getHandValue();
 
-	void checkBust();
-	 inline void resetBust()
-	{
-		isBusted = false;
-	}
-
-	bool checkBlackJack();
+	bool checkBust(); // Return true if busted
+	bool checkBlackJack(); // Return true if BlackJack
 
 	inline void drawCard(deck_t* deck);
+
+	void setStartingHand(deck_t* deck) { hand.push_back(getCardFromTop(deck)); hand.push_back(getCardFromTop(deck)); }
+	void clearHand() { hand.clear(); }
+
+
 
 	// Pure virtual function
 	virtual void showGameHand() = 0;
 
+	virtual bool AI(deck_t* deck) = 0; // Return true if busted, false if not
+	virtual std::string classString() = 0;
 
-	virtual void AI(deck_t* deck) = 0;
+
 };
+
 
 class Dealer : public HandInterface
 {
 public:
-	Dealer(deck_t* deck) : HandInterface(deck) {}
 
 	 void showGameHand() override
 	 {
 		// Dealer has only one card facing so print the first card in his hand.
 		 printCard(hand[0]);
-		 std::cout << " //"; // indicates hidden card. Graphics
+		 std::cout << " ??"; // indicates hidden card. Graphics
 	 }
 	void showFullHand()
 	{
-		// for creating game
-		printDeck(hand);
+		printDeck(&hand);
 	}
 
 	int dealerFaceCardValue()
@@ -128,23 +121,28 @@ public:
 		return hand[DEALER_FACE].rankValue();
 	}
 
-	void AI(deck_t* deck) override;
+	bool AI(deck_t* deck) override;
 
-	
+	 std::string classString() override{ return "Dealer"; };
 };
 
 class Player :public HandInterface
 {
 public:
-	Player(deck_t* deck) : HandInterface(deck) {}
-
 	 void showGameHand() override
 	 {
-		 printDeck(hand);
+		 printDeck(&hand);
 	 }
 
-	void AI(deck_t* deck) override
+	bool AI(deck_t* deck) override
 	{
-		return; // not yet implemented. have to have as its a pure virtual function
+		return true; // not yet implemented. have to have as its a pure virtual function
 	}
+
+	std::string classString() override { return "Player"; };
+
+	bool isSplittable() {return hand[0].rankNumber() == hand[1].rankNumber();}
+
+	void split();
+
 };
