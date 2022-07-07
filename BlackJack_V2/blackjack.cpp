@@ -93,7 +93,7 @@ void BlackJack::Blackjack(int decks, bool betsOn)
 			if (m_bank > 0)
 				play = playAgain();
 			else
-				printf("You're broke.");
+				printf("\nYou're broke.");
 		} while (play && deckPtr->size() > 4 && m_bank > 0); // Bank should always be over 0 if bets are off.
 		// If there are less than 4 cards in the deck, we are just going to create a new deck so we don't run out. probably will change this
 		if(deckPtr->size() < 4)
@@ -133,6 +133,7 @@ int BlackJack::playBlackJack(Player* playerPtr, Dealer* dealerPtr, deck_t* deckP
 	printf("\tPlayer hand value: %i\n", playerPtr->getHandValue());
 	if(betsOn)
 		printBet();
+
 
 	if (int winner = handleBlackjacks(playerPtr, dealerPtr, betsOn))
 		// returns 0 if no blackjacks
@@ -230,6 +231,7 @@ int BlackJack::handleBlackjacks(Player* playerPtr, Dealer* dealerPtr, bool betsO
 		dealerPtr->showFullHand();
 		return DEALER_BLACKJACK;
 	}
+	return 0;
 }
 
 void BlackJack::getPlayerInput(Player* playerPtr, deck_t* deckPtr, bool betsOn)
@@ -260,7 +262,6 @@ void BlackJack::getPlayerInput(Player* playerPtr, deck_t* deckPtr, bool betsOn)
 			if (playerPtr->getHandValue() == BUST_NUMBER) // 21
 				return; // why do you want to hit if you have 21.
 			continue;
-
 		case DOUBLE_DOWN:
 			if (m_bank < m_bet * 2)
 			{
