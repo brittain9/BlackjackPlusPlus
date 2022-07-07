@@ -1,11 +1,8 @@
 # Alex's BlackJack
 
 ### Todo:
-Refactor code and fix rushed parts.
 
-Finish all features of BlackJack including splitting, double down, other features not so far added.
-
-Implement chips and bets.
+Finish all features of BlackJack including splitting, different extra bets.
 
 Optimize code further.
 
