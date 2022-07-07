@@ -5,8 +5,8 @@
 int main()
 {
 	std::string name{ "Alex" };
-	//printf("Please enter your name: ");
-	//std::cin >> name;
+	printf("Please enter your name: ");
+	std::cin >> name;
 
 	BlackJack start(name);
 	start.Blackjack(8, true);

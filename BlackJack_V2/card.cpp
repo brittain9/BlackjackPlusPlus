@@ -214,8 +214,9 @@ bool Dealer::AI(deck_t* deck)
 		}
 	
 		drawCard(deck);
+		printf("\tDealer hand: ");
 		showFullHand();
-		std::cout << "\n\tDealer hand value : " << getHandValue() << '\n';
+		std::cout << "\tDealer hand value : " << getHandValue() << '\n';
 		
 	}
 }

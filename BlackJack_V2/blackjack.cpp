@@ -12,14 +12,6 @@ enum outcomes
 
 };
 
-enum inputs
-{
-	NO_DOUBLE_DOWN,
-	DOUBLEDOWN,
-	SPLIT_NO_DOUBLE_DOWN,
-	SPLIT_OR_DOUBLE_DOWN
-};
-
 enum choices
 {
 	STAND = 1,
@@ -143,6 +135,7 @@ int BlackJack::playBlackJack(Player* playerPtr, Dealer* dealerPtr, deck_t* deckP
 		printBet();
 
 	if (int winner = handleBlackjacks(playerPtr, dealerPtr, betsOn))
+		// returns 0 if no blackjacks
 		return winner; 
 
 	getPlayerInput(playerPtr, deckPtr, betsOn);
@@ -208,7 +201,7 @@ void BlackJack::bet()
 	m_lastBet = m_bet;
 }
 
-int BlackJack::handleBlackjacks(Player* playerPtr, Dealer* dealerPtr, bool betsOn) // we are also going to need to have access to bank here
+int BlackJack::handleBlackjacks(Player* playerPtr, Dealer* dealerPtr, bool betsOn)
 {
 	// Return 0 if no blackJacks. 1 if player, 2 if dealer, 3 if draw
 
@@ -233,165 +226,66 @@ int BlackJack::handleBlackjacks(Player* playerPtr, Dealer* dealerPtr, bool betsO
 	}
 	if (dealerPtr->checkBlackJack())
 	{
+		printf("\n\tBlackjack: ");
 		dealerPtr->showFullHand();
 		return DEALER_BLACKJACK;
 	}
 }
 
-void BlackJack::getPlayerInput(Player* playerPtr, deck_t* deckPtr, bool betsOn) // need access to bank for doubling down
+void BlackJack::getPlayerInput(Player* playerPtr, deck_t* deckPtr, bool betsOn)
 {
-	int inputCase{};
-	int choice{};
-
-	if (betsOn)
+	printf("\nPlayers turn.    ");
+	int choice{ 0 };
+	do
 	{
+		printf("Enter 1 to stand    Enter 2 to hit    ");
+		if (betsOn)
+			printf("Enter 3 to double down    ");
 		if (playerPtr->isSplittable())
+			printf("Enter 4 to split    ");
+
+		choice = getInput<int>("Decision: ");
+
+		switch (choice)
 		{
-			inputCase = SPLIT_OR_DOUBLE_DOWN;
-		}
-		else
-			inputCase = DOUBLEDOWN;
-	}
-	else
-	{
-		if (playerPtr->isSplittable())
-		{
-			inputCase = SPLIT_NO_DOUBLE_DOWN;
-		}
-		else
-			inputCase = NO_DOUBLE_DOWN;
-	}
-
-
-	printf("\nPlayers turn.");
-
-	while (true)
-	{
-		switch (inputCase)
-		{
-		case NO_DOUBLE_DOWN:
-			choice = getInput<int>("\tEnter 1 to stand\tEnter 2 to hit\nDecision: ");
-			switch (choice)
-			{
-			case STAND:
-				printf("\tPlayer Stands.\n\n");
+		case STAND:
+			printf("\tPlayer Stands.\n\n");
+			return;
+		case HIT:
+			playerPtr->drawCard(deckPtr);
+			playerPtr->showGameHand();
+			printf("\n\tPlayer hand value: %i\n", playerPtr->getHandValue());
+			if (playerPtr->checkBust())
 				return;
+			if (playerPtr->getHandValue() == BUST_NUMBER) // 21
+				return; // why do you want to hit if you have 21.
+			continue;
 
-			case HIT:
-				playerPtr->drawCard(deckPtr);
-				playerPtr->showGameHand();
-				printf("\n\tPlayer hand value: %i\n", playerPtr->getHandValue());
-
-				if (playerPtr->checkBust())
-					return;
-
-				continue;
-
-			default:
-				printf("\nNot a valid choice. Retry\n");
+		case DOUBLE_DOWN:
+			if (m_bank < m_bet * 2)
+			{
+				printf("\tYou're too poor to double down.\n");
 				continue;
 			}
-
-		case DOUBLEDOWN:
-			choice = getInput<int>("\tEnter 1 to stand\tEnter 2 to hit\tEnter 3 to double down\nDecision: ");
-			switch (choice)
+			m_bet *= 2;
+			playerPtr->drawCard(deckPtr);
+			playerPtr->showGameHand();
+			printf("\n\tPlayer hand value: %i\n", playerPtr->getHandValue());
+			return;
+		case SPLIT:
+			if (!playerPtr->isSplittable())
 			{
-			case STAND:
-				printf("\tPlayer Stands.\n\n");
-				return;
-
-			case HIT:
-				playerPtr->drawCard(deckPtr);
-				playerPtr->showGameHand();
-				printf("\n\tPlayer hand value: %i\n", playerPtr->getHandValue());
-
-				if (playerPtr->checkBust())
-					return;
-
-				continue;
-
-			case DOUBLE_DOWN:
-				if (m_bank < m_bet * 2)
-				{
-					printf("\tYou're too poor to double down.\n");
-					continue;
-				}
-				m_bet *= 2;
-				playerPtr->drawCard(deckPtr);
-				playerPtr->showGameHand();
-				printf("\n\tPlayer hand value: %i\n", playerPtr->getHandValue());
-				return;
-
-			default:
-				printf("\nNot a valid choice. Retry\n");
+				printf("You weren't even given the option to split this hand.");
 				continue;
 			}
-		case SPLIT_NO_DOUBLE_DOWN:
-			choice = getInput<int>("\tEnter 1 to stand\tEnter 2 to hit\tEnter 3 to split\nDecision: ");
-			switch (choice)
-			{
-			case STAND:
-				printf("\tPlayer Stands.\n\n");
-				return;
-
-			case HIT:
-				playerPtr->drawCard(deckPtr);
-				playerPtr->showGameHand();
-				printf("\n\tPlayer hand value: %i\n", playerPtr->getHandValue());
-
-				if (playerPtr->checkBust())
-					return;
-
-				continue;
-			case SPLIT - 1: // enum is off in this case
-				printf("Not implemented yet.");
-				continue;
-
-			default:
-				printf("\nNot a valid choice. Retry\n");
-				continue;
-			}
-		case SPLIT_OR_DOUBLE_DOWN:
-			choice = getInput<int>("\tEnter 1 to stand\tEnter 2 to hit\tEnter 3 to double down\tEnter 4 to split\nDecision: ");
-			switch (choice)
-			{
-			case STAND:
-				printf("\tPlayer Stands.\n\n");
-				return;
-
-			case HIT:
-				playerPtr->drawCard(deckPtr);
-				playerPtr->showGameHand();
-				printf("\n\tPlayer hand value: %i\n", playerPtr->getHandValue());
-
-				if (playerPtr->checkBust())
-					return;
-
-				continue;
-
-			case DOUBLE_DOWN:
-				if (m_bank < m_bet * 2)
-				{
-					printf("\tYou're too poor to double down.\n");
-					continue;
-				}
-				m_bet *= 2;
-				playerPtr->drawCard(deckPtr);
-				playerPtr->showGameHand();
-				printf("\n\tPlayer hand value: %i\n", playerPtr->getHandValue());
-				return;
-			case SPLIT:
-				printf("Not implemented yet.");
-				continue;
-			default:
-				printf("\nNot a valid choice. Retry\n");
-				continue;
-			}
-
+			printf("Not implemented yet.");
+			continue;
+		default:
+			printf("\nNot a valid choice. Retry\n");
 		}
 	}
+	while (true);
 }
-
 
 int whoWon(Player* playerPtr, Dealer* dealerPtr)
 {
