@@ -27,6 +27,7 @@ public:
 
 	void Blackjack(int decks = DEFAULT_NUM_DECKS, bool betsOn = true);
 	int playBlackJack(Player* playerPtr, Dealer* dealerPtr, deck_t* deckPtr, bool betsOn);
+	void handleOutcomes(int outcome, bool betsOn);
 
 	void incPlayerWins() { m_playerWins++; }
 	void incDealerWins() { m_dealerWins++; }
@@ -35,9 +36,11 @@ public:
 
 	void bet();
 	int handleBlackjacks(Player* playerPtr, Dealer* dealerPtr, bool betsOn);
-	void getPlayerInput(deck_t& playerhand, deck_t* deck, bool betsOn);
+	std::vector<std::vector<int[2]>> getPlayerInput(deck_t& playerhand, deck_t* deckPtr, bool betsOn, std::vector<std::vector<int[2]>> split = {});
 
-	void Split(deck_t* deckPtr,deck_t& handToSplit, bool betsOn, int prevBet = 0, int iteration = 0);
+	std::vector<int[2]> Split(deck_t* deckPtr, deck_t& handToSplit, bool betsOn, std::vector<std::vector<int[2]>>& split);
+	void _getSplitInput(deck_t& playerhand, deck_t* deckPtr, bool betsOn, std::vector<std::vector<int[2]>>& split);
+
 
 	void printBet();
 };

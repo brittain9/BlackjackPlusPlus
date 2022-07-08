@@ -4,6 +4,8 @@
 #include <memory>
 #include "settings.h"
 
+#define DEALER_FACE = 0; // dealer face card is index 0 of hand.
+
 class HandInterface;
 class Player;
 class Dealer;
@@ -83,7 +85,7 @@ void printCard(Card* card);
 // Had to make a lot of methods I had also into functions taking a hand for splitting
 static bool isSplittable(deck_t hand) { return hand[0].rankNumber() == hand[1].rankNumber(); }
 void drawCard( deck_t* deck, deck_t* hand);
-void showGameHand(const deck_t& hand);
+inline void showGameHand(const deck_t& hand);
 int getHandValue(deck_t hand);
 bool checkBust(deck_t hand);
 
@@ -133,7 +135,7 @@ public:
 
 	int dealerFaceCardValue()
 	{
-		return hand[DEALER_FACE].rankValue();
+		return hand[0].rankValue();
 	}
 
 	bool AI(deck_t* deck) override;

@@ -8,7 +8,8 @@ enum outcomes
 	DEALER_WINS,
 	PUSH,
 	PLAYER_BLACKJACK,
-	DEALER_BLACKJACK
+	DEALER_BLACKJACK,
+	SPLIT_DECIDED
 
 };
 
@@ -39,60 +40,11 @@ void BlackJack::Blackjack(int decks, bool betsOn)
 		do
 		{
 			int outcome = playBlackJack(playerPtr, dealerPtr, deckPtr, betsOn);
-			switch (outcome)
-			{
-			case PLAYER_WINS:
-				m_playerWins++;
-				if(betsOn)
-				{
-					printf("\n\t%s wins $%i!\n", m_name.c_str(), m_bet);
-					m_bank += m_bet;
-				}
-				else
-					printf("\n\t%s wins!\n", m_name.c_str());
-				
-				break;
-			case DEALER_WINS:
-				m_dealerWins++;
-				if(betsOn)
-				{
-					printf("\n\tDealer wins! %s lost $%i!\n", m_name.c_str(), m_bet);
-					m_bank -= m_bet;
-				}
-				else
-				{
-					printf("\n\tDealer wins!\n");
-				}
-				break;
-			case PUSH:
-				m_pushes++;
-				if(betsOn)
-					printf("\n\tDraw! Returned $%i.\n",m_bet);
-				else
-					printf("\n\tDraw!\n");
-				break;
-			case PLAYER_BLACKJACK:
-				m_playerWins++;
-				m_playerBlackjacks++;
-				if (betsOn)
-				{
-					printf("\n\tBlackjack for %s! They win $%i!\n", m_name.c_str(), static_cast<int>(m_bet * BLACKJACK_PAYOUT_RATE));
-					m_bank += static_cast<int>(m_bet * BLACKJACK_PAYOUT_RATE);
-				}
-				else
-					printf("\nBlackjack for the player!\n");
-				break;
-			case DEALER_BLACKJACK:
-				m_dealerWins++;
-				m_dealerBlackjacks++;
-				if (betsOn)
-					m_bank -= m_bet;
-				printf("\n\tBlackjack for the dealer!\n");
-			}
+			handleOutcomes(outcome, betsOn);
 			if (m_bank > 0)
 				play = playAgain();
 			else
-				printf("\nYou're broke.");
+				printf("\nYou went broke. Press enter to see results");
 		} while (play && deckPtr->size() > 4 && m_bank > 0); // Bank should always be over 0 if bets are off.
 		// If there are less than 4 cards in the deck, we are just going to create a new deck so we don't run out. probably will change this
 		if(deckPtr->size() < 4)
@@ -108,6 +60,62 @@ void BlackJack::Blackjack(int decks, bool betsOn)
 	delete playerPtr;
 	delete dealerPtr;
 }
+void BlackJack::handleOutcomes(int outcome, bool betsOn)
+{
+	switch (outcome)
+	{
+	case PLAYER_WINS:
+		m_playerWins++;
+		if (betsOn)
+		{
+			printf("\n\t%s wins $%i!\n", m_name.c_str(), m_bet);
+			m_bank += m_bet;
+		}
+		else
+			printf("\n\t%s wins!\n", m_name.c_str());
+
+		break;
+	case DEALER_WINS:
+		m_dealerWins++;
+		if (betsOn)
+		{
+			printf("\n\tDealer wins! %s lost $%i!\n", m_name.c_str(), m_bet);
+			m_bank -= m_bet;
+		}
+		else
+		{
+			printf("\n\tDealer wins!\n");
+		}
+		break;
+	case PUSH:
+		m_pushes++;
+		if (betsOn)
+			printf("\n\tDraw! Returned $%i.\n", m_bet);
+		else
+			printf("\n\tDraw!\n");
+		break;
+	case PLAYER_BLACKJACK:
+		m_playerWins++;
+		m_playerBlackjacks++;
+		if (betsOn)
+		{
+			printf("\n\tBlackjack for %s! They win $%i!\n", m_name.c_str(), static_cast<int>(m_bet * BLACKJACK_PAYOUT_RATE));
+			m_bank += static_cast<int>(m_bet * BLACKJACK_PAYOUT_RATE);
+		}
+		else
+			printf("\nBlackjack for the player!\n");
+		break;
+	case DEALER_BLACKJACK:
+		m_dealerWins++;
+		m_dealerBlackjacks++;
+		if (betsOn)
+			m_bank -= m_bet;
+		printf("\n\tBlackjack for the dealer!\n");
+	case SPLIT_DECIDED:
+		break;
+	}
+}
+
 
 int BlackJack::playBlackJack(Player* playerPtr, Dealer* dealerPtr, deck_t* deckPtr, bool betsOn)
 {
@@ -115,8 +123,8 @@ int BlackJack::playBlackJack(Player* playerPtr, Dealer* dealerPtr, deck_t* deckP
 
 	playerPtr->clearHand();
 	dealerPtr->clearHand();
-	
-	if(betsOn)
+
+	if (betsOn)
 	{
 		printf("\nTotal Bank: $%i\n", m_bank);
 		bet();
@@ -128,15 +136,21 @@ int BlackJack::playBlackJack(Player* playerPtr, Dealer* dealerPtr, deck_t* deckP
 	printHand(dealerPtr);
 	printHand(playerPtr);
 	printf("\tPlayer hand value: %i\n", playerPtr->getHandValue());
-	if(betsOn)
+	if (betsOn)
 		printBet();
 
 	if (int winner = handleBlackjacks(playerPtr, dealerPtr, betsOn))
 		// returns 0 if no blackjacks
-		return winner; 
+		return winner;
 
-	getPlayerInput( playerPtr->getHand(), deckPtr, betsOn);
-	if(checkBust(playerPtr->getHand()))
+	std::vector<std::vector<int[2]>> split = getPlayerInput(playerPtr->getHand(), deckPtr, betsOn);
+	if (!split.empty())
+	{
+		// handle split win/lose and bets.
+
+		return SPLIT_DECIDED;
+	}
+	if (checkBust(playerPtr->getHand()))
 	{
 		printf("\nPlayer busted\n");
 		return DEALER_WINS;
@@ -149,7 +163,7 @@ int BlackJack::playBlackJack(Player* playerPtr, Dealer* dealerPtr, deck_t* deckP
 		return PLAYER_WINS;
 	}
 
-	return whoWon(playerPtr->getHand(),dealerPtr);
+	return whoWon(playerPtr->getHand(), dealerPtr);
 }
 
 void printHand(HandInterface* hand)
@@ -232,9 +246,103 @@ int BlackJack::handleBlackjacks(Player* playerPtr, Dealer* dealerPtr, bool betsO
 	return 0;
 }
 
-void BlackJack::getPlayerInput(deck_t& playerhand, deck_t* deckPtr, bool betsOn)
+std::vector<std::vector<int[2]>> BlackJack::getPlayerInput(deck_t& playerhand, deck_t* deckPtr, bool betsOn, std::vector<std::vector<int[2]>> didSplit)
 {
+	// empty vector if player did not split hand. Vector of outcomes and bet amounts if did... 
 	printf("\nPlayers turn.    ");
+	int choice{ 0 };
+	do
+	{
+		printf("Enter 1 to stand    Enter 2 to hit    ");
+		if (betsOn)
+			printf("Enter 3 to double down    ");
+		if (isSplittable(playerhand))
+			printf("Enter 4 to split    ");
+
+		choice = getInput<int>("Decision: ");
+
+		switch (choice)
+		{
+		case STAND:
+			printf("\n\tPlayer Stands.\n\n");
+			return didSplit;
+		case HIT:
+			drawCard(deckPtr, &playerhand); // had to change this for split
+			printf("\n\tPlayer hand: ");
+			showGameHand(playerhand); // split change
+			printf("\n\tPlayer hand value: %i\n", getHandValue(playerhand));
+			if (checkBust(playerhand))
+				return didSplit;
+			if (getHandValue(playerhand) == BUST_NUMBER) // 21
+				return didSplit; // why do you want to hit if you have 21.
+			continue;
+		case DOUBLE_DOWN:
+			if (m_bank < m_bet * 2)
+			{
+				printf("\tYou're too poor to double down.\n");
+				continue;
+			}
+			m_bet *= 2;
+			drawCard(deckPtr, &playerhand);
+			printf("\n\tPlayer hand: ");
+			showGameHand(playerhand);
+			printf("\n\tPlayer hand value: %i\n", getHandValue(playerhand));
+			return didSplit;
+		case SPLIT:
+			if (!isSplittable(playerhand))
+			{
+				printf("\nYou weren't even given the option to split this hand.");
+				continue;
+			}
+			//if(m_bet < m_bet * 2) // forget money for now. Splitting is complicated enough.
+			//{
+			//	printf("\nYou don't have enough money to place your bet on another hand.");
+			//	continue;
+
+			deck_t splitHand;
+			splitHand.reserve(sizeof(Card) * 2);
+			splitHand[0] = playerhand[1]; // set first card to second card of initialHand
+			splitHand[1] = getCardFromTop(deckPtr); // set second card to next card from deck. Hit.
+
+			// set up initialHand
+			playerhand[1] = getCardFromTop(deckPtr);
+
+			std::vector<int[2]> splitResults = Split(deckPtr, playerhand, betsOn, didSplit);
+			if (!splitResults.empty()) // if function did not return an empty vector, push_back into vector
+				didSplit.push_back(splitResults);
+			getPlayerInput(splitHand, deckPtr, betsOn, didSplit); // My brain is dead, but the solution to splitting is recursion!
+
+		}
+	}
+	while (true);
+	
+}
+std::vector<int[2]> BlackJack::Split(deck_t* deckPtr, deck_t& initialHand, bool betsOn, std::vector<std::vector<int[2]>>& split)
+{
+	// return vector of array of 2 ints. 1 split = 2 outcomes. Max 2 splits = 3 outcomes. Read settings.h for rules
+
+	std::vector<int[2]> splitResults{};
+	// we've already checked if hand is splittable.
+	//if (betsOn && m_bank < (m_bet * 2 + sizeof(split))) // sizeof(split) tracks iterations. If size = 0, we have not split yet.
+	//{
+	//	// can player afford split.
+	//	printf("\tYou're too poor to split.\n");
+	//	return splitResults;
+	//}
+
+	printDeck(&initialHand);
+	printf("\tHand value: %i\n", getHandValue(initialHand));
+	if (betsOn)
+		printBet();
+
+	_getSplitInput(initialHand, deckPtr, betsOn, split);
+	
+}
+
+void BlackJack::_getSplitInput(deck_t& playerhand, deck_t* deckPtr, bool betsOn, std::vector<std::vector<int[2]>>& split)
+{
+
+	printf("Player Split #%i\t", split.size() + 1);
 	int choice{ 0 };
 	do
 	{
@@ -252,9 +360,9 @@ void BlackJack::getPlayerInput(deck_t& playerhand, deck_t* deckPtr, bool betsOn)
 			printf("\n\tPlayer Stands.\n\n");
 			return;
 		case HIT:
-			drawCard(deckPtr, &playerhand); // had to change this for split
-			printf("\n\tPlayer hand: ");
-			showGameHand(playerhand); // split change
+			drawCard(deckPtr, &playerhand); // add card to current hand
+			printf("\n\tPlayer hand %i: ", split.size() + 1);
+			showGameHand(playerhand); 
 			printf("\n\tPlayer hand value: %i\n", getHandValue(playerhand));
 			if (checkBust(playerhand))
 				return;
@@ -267,55 +375,41 @@ void BlackJack::getPlayerInput(deck_t& playerhand, deck_t* deckPtr, bool betsOn)
 				printf("\tYou're too poor to double down.\n");
 				continue;
 			}
-			m_bet *= 2;
-			drawCard( deckPtr, &playerhand);
+			m_bet *= 2; // has to multiply the bet on the current hand
+			drawCard(deckPtr, &playerhand);
 			printf("\n\tPlayer hand: ");
 			showGameHand(playerhand);
 			printf("\n\tPlayer hand value: %i\n", getHandValue(playerhand));
 			return;
 		case SPLIT:
-			if (!isSplittable(playerhand))
+			if (split.size() > 3)
 			{
-				printf("You weren't even given the option to split this hand.");
+				printf("You can only split three times");
 				continue;
 			}
-			printf("Not implemented yet.");
-			continue;
-		default:
-			printf("\nNot a valid choice. Retry\n");
+			if (!isSplittable(playerhand))
+			{
+				printf("\nYou weren't even given the option to split this hand.");
+				continue;
+			}
+			//if(m_bet < m_bet * 2) // forget money for now. Splitting is complicated enough.
+			//{
+			//	printf("\nYou don't have enough money to place your bet on another hand.");
+			//	continue;
+
+			deck_t splitHand;
+			splitHand.reserve(sizeof(Card) * 2);
+			splitHand[0] = playerhand[1]; // set first card to second card of initialHand
+			splitHand[1] = getCardFromTop(deckPtr); // set second card to next card from deck. Hit.
+
+			// set up initialHand
+			playerhand[1] = getCardFromTop(deckPtr);
+
+			std::vector<int[2]> splitResults = Split(deckPtr, playerhand, betsOn, split);
+			if (!splitResults.empty()) // if function did not return an empty vector, push_back into vector
+				split.push_back(splitResults);
 		}
-	}
-	while (true);
-}
-
-void BlackJack::Split( deck_t* deckPtr ,deck_t& initialHand, bool betsOn, int prevBet, int iteration ) // we can split up to three times so we want to take in the players starting hand and be able to pass in split hands to split
-{
-	// this function is annoying because I have structured the classes for 1 hand and 1 bet, yet splitting you can have 4 hands and 4 bets... I also can't easily handle the bets the same way as I have been before.
-
-	// we've already checked if hand is splittable.
-	if (betsOn && m_bank < (m_bet * 2 + prevBet * iteration))
-	{
-		// can player afford split.
-		printf("\tYou're too poor to split.\n");
-		return;
-	}
-
-	// set up splitHand
-	deck_t splitHand;
-	splitHand.reserve(sizeof(Card) * 2);
-	splitHand[0] = initialHand[1]; // set first card to second card of initialHand
-	splitHand[1] = getCardFromTop(deckPtr); // set second card to next card from deck. Hit.
-
-	// set up initialHand
-	initialHand[1] = getCardFromTop(deckPtr); // set second card in initial hand to next card from deck. Hit.
-
-	// At this point. Both of our hands are set up.
-	/*Cases and considerations:
-	 * if we split ace, we can only hit once. https://www.casinocitytimes.com/alan-krigman/article/in-blackjack-why-can-you-only-hit-aces-once-after-a-split-62324
-	 * we need to see if either hand can be split again.
-	 * we need t
-	 */
-	
+	} while (true);
 }
 
 int whoWon(deck_t& playerHand, Dealer* dealerPtr)
