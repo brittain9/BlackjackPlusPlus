@@ -36,14 +36,16 @@ public:
 
 	void bet();
 	int handleBlackjacks(Player* playerPtr, Dealer* dealerPtr, bool betsOn);
-	std::vector<std::vector<int[2]>> getPlayerInput(deck_t& playerhand, deck_t* deckPtr, bool betsOn, std::vector<std::vector<int[2]>> split = {});
+	void getPlayerInput(Player* playerPtr, Dealer* dealerPtr, deck_t& playerhand, deck_t* deckPtr, bool betsOn, bool split = false);
 
-	std::vector<int[2]> Split(deck_t* deckPtr, deck_t& handToSplit, bool betsOn, std::vector<std::vector<int[2]>>& split);
-	void _getSplitInput(deck_t& playerhand, deck_t* deckPtr, bool betsOn, std::vector<std::vector<int[2]>>& split);
+	int determineSplits(Player* playerPtr, Dealer* dealerPtr, deck_t* deckPtr, bool betsOn);
 
+	const int getBank() const { return m_bank; }
 
 	void printBet();
 };
+
+
 
 void printHand(HandInterface* hand);
 bool playAgain();

@@ -89,6 +89,11 @@ inline void showGameHand(const deck_t& hand);
 int getHandValue(deck_t hand);
 bool checkBust(deck_t hand);
 
+static void clearDeck(deck_t& deck) 
+{
+	deck.clear();
+}
+
 
 class HandInterface
 {
@@ -145,7 +150,13 @@ public:
 
 class Player :public HandInterface
 {
+public: // make public for now
+	deck_t split1 = {};
+	int split1Bet = 0;
+	deck_t split2 = {};
+	int split2Bet = 0;
 public:
+
 	 void showGameHand() override
 	 {
 		 printDeck(&hand);
@@ -162,4 +173,8 @@ public:
 	{
 		hand = newHand;
 	}
+
+	deck_t getSplit1() { return split1; }
+
+	deck_t getSplit2() { return split2; }
 };
