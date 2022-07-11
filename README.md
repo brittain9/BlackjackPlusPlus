@@ -2,15 +2,15 @@
 
 ### Todo:
 
-Finish all features of BlackJack including splitting, different extra bets.
+Optimize code
 
-Optimize code further.
-
-## Bigger Todos:
+Implement all bets found in a real blackjack game including insurance and others.
 
 BlackJack Strategy Tester: Implement an AI that can perform BlackJack strategies and simulate the performance of these strategies.
 
+Test shuffle randomness and shuffle cards better if needed. Just using std::shuffle right now. For the strategy tester, if the shuffling is not completely random then the results may be skewed.
+
+
+## Bigger Todos:
+
 Create graphics using OpenGL to play in an actual window instead of console.
-
-
-I have learned a lot since I wrote the first commit. I solved a lot of problems that code had including the major stack overflow issue that occured after several loops of the game.
