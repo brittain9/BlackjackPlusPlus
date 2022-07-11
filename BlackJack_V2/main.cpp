@@ -9,7 +9,7 @@ int main()
 	//std::cin >> name;
 
 	BlackJack start(name);
-	start.Blackjack(8, true);
+	start.Blackjack(1, true);
 
 	getchar();
 

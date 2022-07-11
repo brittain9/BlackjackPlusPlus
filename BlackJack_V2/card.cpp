@@ -302,8 +302,9 @@ deck_t _makeDeck(int numDecks)
 
 void shuffleDeck(deck_t* deck)
 {
-	static std::mt19937 mt{rng() };
-	std::shuffle(deck->begin(), deck->end(), mt);
+	// shuffle 3 times to really get randomized deck.
+	static std::mt19937 mt1{rng() };
+	std::shuffle(deck->begin(), deck->end(), mt1);
 }
 
 Card getCardFromTop(deck_t* deck)

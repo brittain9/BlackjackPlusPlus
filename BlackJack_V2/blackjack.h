@@ -27,7 +27,8 @@ public:
 
 	void Blackjack(int decks = DEFAULT_NUM_DECKS, bool betsOn = true);
 	int playBlackJack(Player* playerPtr, Dealer* dealerPtr, deck_t* deckPtr, bool betsOn);
-	void handleOutcomes(int outcome, bool betsOn);
+	void handleOutcomes(Player* playerPtr ,int outcome, bool betsOn, bool split1 = false, bool split2 = false);
+
 
 	void incPlayerWins() { m_playerWins++; }
 	void incDealerWins() { m_dealerWins++; }
@@ -36,7 +37,7 @@ public:
 
 	void bet();
 	int handleBlackjacks(Player* playerPtr, Dealer* dealerPtr, bool betsOn);
-	void getPlayerInput(Player* playerPtr, Dealer* dealerPtr, deck_t& playerhand, deck_t* deckPtr, bool betsOn, bool split = false);
+	void getPlayerInput(Player* playerPtr, Dealer* dealerPtr, deck_t& playerhand, deck_t* deckPtr, bool betsOn, bool split1 = false, bool split2 = false);
 
 	int determineSplits(Player* playerPtr, Dealer* dealerPtr, deck_t* deckPtr, bool betsOn);
 

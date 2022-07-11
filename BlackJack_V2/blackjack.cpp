@@ -29,6 +29,8 @@ void BlackJack::Blackjack(int decks, bool betsOn)
 	deck_t* deckPtr{ new deck_t(_makeDeck(decks)) };
 
 	shuffleDeck(deckPtr);
+	shuffleDeck(deckPtr);
+	shuffleDeck(deckPtr);
 
 	Dealer* dealerPtr{ new Dealer() };
 	Player* playerPtr{ new Player() };
@@ -37,12 +39,16 @@ void BlackJack::Blackjack(int decks, bool betsOn)
 
 	while(play && m_bank > 0)
 	{
+		printDeck(deckPtr);
+		printf("\n");
 		do
 		{
 			int outcome = playBlackJack(playerPtr, dealerPtr, deckPtr, betsOn);
-			handleOutcomes(outcome, betsOn);
+			handleOutcomes(playerPtr, outcome, betsOn);
 			if (m_bank > 0)
 				play = playAgain();
+			if (m_bank > m_highestBank)
+				m_highestBank = m_bank;
 			else
 				printf("\nYou went broke. Press enter to see results");
 		} while (play && deckPtr->size() > 4 && m_bank > 0); // Bank should always be over 0 if bets are off.
@@ -60,19 +66,31 @@ void BlackJack::Blackjack(int decks, bool betsOn)
 	delete playerPtr;
 	delete dealerPtr;
 }
-void BlackJack::handleOutcomes(int outcome, bool betsOn)
+
+void BlackJack::handleOutcomes(Player* playerPtr ,int outcome, bool betsOn, bool split1, bool split2)
 {
 	switch (outcome)
 	{
 	case PLAYER_WINS:
 		m_playerWins++;
-		if (betsOn)
+		if (betsOn && !split1 && !split2)
 		{
 			printf("\n\t%s wins $%i!\n", m_name.c_str(), m_bet);
 			m_bank += m_bet;
 		}
+		else if (betsOn && split1)
+		{
+			printf("\n\t%s wins $%i on split 1!", m_name.c_str(), playerPtr->split1Bet);
+			m_bank += playerPtr->split1Bet;
+
+		}
+		else if (betsOn && split2)
+		{
+			printf("\n\t%s wins $%i on split 2!", m_name.c_str(), playerPtr->split2Bet);
+			m_bank += playerPtr->split2Bet;
+		}
 		else
-			printf("\n\t%s wins!\n", m_name.c_str());
+		printf("\n\t%s wins!\n", m_name.c_str());
 
 		break;
 	case DEALER_WINS:
@@ -81,6 +99,14 @@ void BlackJack::handleOutcomes(int outcome, bool betsOn)
 		{
 			printf("\n\tDealer wins! %s lost $%i!\n", m_name.c_str(), m_bet);
 			m_bank -= m_bet;
+		}
+		else if (betsOn && split1) {
+			printf("\n\tDealer wins on split 1! %s lost $%i!\n", m_name.c_str(), playerPtr->split1Bet);
+			m_bank -= playerPtr->split1Bet;
+		}
+		else if (betsOn && split2) {
+			printf("\n\tDealer wins on split 2! %s lost $%i!\n", m_name.c_str(), playerPtr->split2Bet);
+			m_bank -= playerPtr->split2Bet;
 		}
 		else
 		{
@@ -111,6 +137,7 @@ void BlackJack::handleOutcomes(int outcome, bool betsOn)
 		if (betsOn)
 			m_bank -= m_bet;
 		printf("\n\tBlackjack for the dealer!\n");
+
 	case SPLIT_DECIDED:
 		break;
 	}
@@ -251,14 +278,14 @@ int BlackJack::handleBlackjacks(Player* playerPtr, Dealer* dealerPtr, bool betsO
 	return 0;
 }
 
-void BlackJack::getPlayerInput(Player* playerPtr, Dealer* dealerPtr ,deck_t& playerhand, deck_t* deckPtr, bool betsOn, bool split)
+void BlackJack::getPlayerInput(Player* playerPtr, Dealer* dealerPtr ,deck_t& playerhand, deck_t* deckPtr, bool betsOn, bool split1, bool split2)
 {
 	printf("\nPlayers turn.    ");
 	int choice{ 0 };
 	do
 	{
 		printf("Enter 1 to stand    Enter 2 to hit    ");
-		if (betsOn)
+		if (betsOn && playerhand.size() == 2)
 			printf("Enter 3 to double down    ");
 		if (isSplittable(playerhand))
 			printf("Enter 4 to split    ");
@@ -281,12 +308,22 @@ void BlackJack::getPlayerInput(Player* playerPtr, Dealer* dealerPtr ,deck_t& pla
 				return; // why do you want to hit if you have 21.
 			continue;
 		case DOUBLE_DOWN:
-			if (m_bank < m_bet * 2)
+			if (playerhand.size() > 2)
+			{
+				printf("\tYou didn't even have the option to double down.\n");
+				continue;
+			}
+			if (m_bank < m_bet * 2 + playerPtr->split1Bet + playerPtr->split2Bet)
 			{
 				printf("\tYou're too poor to double down.\n");
 				continue;
 			}
-			m_bet *= 2;
+			if (split1)
+				playerPtr->split1Bet *= 2;
+			else if (split2)
+				playerPtr->split2Bet *= 2;
+			else
+				m_bet *= 2;
 			drawCard(deckPtr, &playerhand);
 			printf("\n\tPlayer hand: ");
 			printDeck(&playerhand);
@@ -298,7 +335,7 @@ void BlackJack::getPlayerInput(Player* playerPtr, Dealer* dealerPtr ,deck_t& pla
 				printf("\nYou weren't even given the option to split this hand.");
 				continue;
 			}
-			if (m_bank < m_bet * 2) // forget money for now. Splitting is complicated enough.
+			if (m_bank < m_bet * 2 + playerPtr->split1Bet + playerPtr->split2Bet) 
 			{
 				printf("\nYou don't have enough money to place your bet on another hand.");
 				continue;
@@ -308,21 +345,19 @@ void BlackJack::getPlayerInput(Player* playerPtr, Dealer* dealerPtr ,deck_t& pla
 			{
 				playerPtr->split1.push_back(playerhand[1]); // set first card to second card of initialHand
 				playerPtr->split1.push_back(getCardFromTop(deckPtr)); // set next card to top card from deck
+				playerPtr->split1Bet = m_bet;
 			}
 			else if(playerPtr->getSplit2().empty())
 			{
 				playerPtr->split2.push_back(playerPtr->split1[1]); // set first card to second card of initialHand
-				playerPtr->split2.push_back(getCardFromTop(deckPtr)); // set next card to top card from deck
+				playerPtr->split2.push_back(getCardFromTop(deckPtr));
+				playerPtr->split2Bet = m_bet;
 			} 
 			else if (!playerPtr->getSplit2().empty())
 			{
 				printf("\nYou can only split twice.\n");
 				continue;
 			}
-
-
-			
-			
 
 			playerhand[1] = getCardFromTop(deckPtr); // set second card from first hand to next card from deck
 
@@ -337,7 +372,7 @@ void BlackJack::getPlayerInput(Player* playerPtr, Dealer* dealerPtr ,deck_t& pla
 			if (!playerPtr->split1.empty() && !playerPtr->split2.empty()) {
 				printf("\n\tSecond Split: ");
 				printDeck(&playerPtr->split2);
-				getPlayerInput(playerPtr, dealerPtr, playerPtr->split2, deckPtr, betsOn, true);
+				getPlayerInput(playerPtr, dealerPtr, playerPtr->split2, deckPtr, betsOn, false, true);
 			}
 			
 			determineSplits(playerPtr, dealerPtr, deckPtr, betsOn);
@@ -350,17 +385,45 @@ void BlackJack::getPlayerInput(Player* playerPtr, Dealer* dealerPtr ,deck_t& pla
 
 int BlackJack::determineSplits(Player* playerPtr, Dealer* dealerPtr, deck_t* deckPtr, bool betsOn)
 {
+	dealerPtr->AI(deckPtr);
+
 	int firstOutcome = whoWon(playerPtr->getHand(), dealerPtr);
-	handleOutcomes(firstOutcome, betsOn);
+	if (checkBust(playerPtr->getHand())) {
+		firstOutcome = DEALER_WINS;
+	}
 
 	int secondOutcome = whoWon(playerPtr->split1, dealerPtr);
-	handleOutcomes(secondOutcome, betsOn);
-
+	if (checkBust(playerPtr->getSplit1())) {
+		secondOutcome = DEALER_WINS;
+	}
+	int thirdOutcome{ SPLIT_DECIDED };
 	if (!playerPtr->split1.empty() && !playerPtr->split2.empty())
 	{
-		int thirdOutcome = whoWon(playerPtr->split2, dealerPtr);
-		handleOutcomes(thirdOutcome, betsOn);
+		thirdOutcome = whoWon(playerPtr->split2, dealerPtr);
+		if (checkBust(playerPtr->getSplit2())) {
+			thirdOutcome = DEALER_WINS;
+		}
 	}
+
+	if (dealerPtr->checkBust()) {
+		// if dealer busted and player not already busted.
+		if (!checkBust(playerPtr->getHand()))
+			firstOutcome = PLAYER_WINS;
+		if (!checkBust(playerPtr->getSplit1()))
+			secondOutcome = PLAYER_WINS;
+		if (!playerPtr->split1.empty() && !playerPtr->split2.empty())
+			if (!checkBust(playerPtr->getSplit2()))
+				thirdOutcome = PLAYER_WINS;
+		}
+
+	
+	handleOutcomes(playerPtr, firstOutcome, betsOn);
+	handleOutcomes(playerPtr, secondOutcome, betsOn, true);
+	if (!playerPtr->split1.empty() && !playerPtr->split2.empty())
+		handleOutcomes(playerPtr, thirdOutcome, betsOn, false, true);
+
+
+
 	return SPLIT_DECIDED;
 
 }

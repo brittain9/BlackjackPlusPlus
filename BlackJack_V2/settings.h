@@ -10,7 +10,7 @@ Double down: double bet on hand (if split hand only doubles one of your bets) th
  */
 
 
-constexpr int STARTING_BANK = 500;
+constexpr int STARTING_BANK = 1000 ;
 
 constexpr float BLACKJACK_PAYOUT_RATE = 1.5f; // 3:2 payout for blackjacks
 
