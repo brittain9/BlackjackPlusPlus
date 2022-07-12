@@ -4,32 +4,37 @@
 #include <memory>
 #include "settings.h"
 
-#define DEALER_FACE = 0; // dealer face card is index 0 of hand.
-
+class Card;
 class HandInterface;
 class Player;
 class Dealer;
-class Card;
+
 
 //Typedefs
 typedef std::vector<Card> deck_t;
 
 //Declarations
 deck_t _makeDeck(int numDecks = DEFAULT_NUM_DECKS);
-
 void shuffleDeck(deck_t* deck);
-
-
 void printDeck(const deck_t* deck);
-
 
 Card getCardFromTop(deck_t* deck);
 deck_t& createStartHand(deck_t* deck);
 
+void printCard(const Card& card);
+void printCard(Card* card);
+
+bool isSplittable(deck_t hand);
+inline void showGameHand(const deck_t& hand);
+int getHandValue(deck_t hand);
+bool checkBust(deck_t hand);
+
+static void clearDeck(deck_t& deck) { deck.clear(); }
+
+
 // Classes
 class Card
 {
-private:
 	enum suit_t : unsigned char // Using unsigned char for suit so it will be 1 byte only.
 	{
 		hearts,
@@ -79,22 +84,6 @@ public:
 	int rankNumber(); // differentiates between 10, Jack, Queen, King
 };
 
-void printCard(const Card& card);
-void printCard(Card* card);
-
-// Had to make a lot of methods I had also into functions taking a hand for splitting
-static bool isSplittable(deck_t hand) { return hand[0].rankNumber() == hand[1].rankNumber(); }
-void drawCard( deck_t* deck, deck_t* hand);
-inline void showGameHand(const deck_t& hand);
-int getHandValue(deck_t hand);
-bool checkBust(deck_t hand);
-
-static void clearDeck(deck_t& deck) 
-{
-	deck.clear();
-}
-
-
 class HandInterface
 {
 protected:
@@ -106,12 +95,8 @@ public:
 	bool checkBust(); // Return true if busted
 	bool checkBlackJack(); // Return true if BlackJack
 
-	inline void drawCard(deck_t* deck);
-
 	void setStartingHand(deck_t* deck) { hand.push_back(getCardFromTop(deck)); hand.push_back(getCardFromTop(deck)); }
 	void clearHand() { hand.clear(); }
-
-
 
 	// Pure virtual function
 	virtual void showGameHand() = 0;
@@ -121,7 +106,6 @@ public:
 
 
 };
-
 
 class Dealer : public HandInterface
 {
@@ -162,17 +146,12 @@ public:
 		 printDeck(&hand);
 	 }
 
-	bool AI(deck_t* deck) override
-	{
-		return true; // not yet implemented. have to have as its a pure virtual function
-	}
+	 bool AI(deck_t* deck) override { return true; } // not implemented.
 
 	std::string classString() override { return "Player"; };
 
-	void setHand(deck_t newHand)
-	{
-		hand = newHand;
-	}
+	void setHand(deck_t newHand) {hand = newHand;}
+
 
 	deck_t getSplit1() { return split1; }
 

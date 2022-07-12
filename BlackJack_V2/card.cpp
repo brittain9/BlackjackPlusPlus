@@ -4,6 +4,12 @@
 
 #define ACE_ADDITONAL_VALUE 10 // Ace rankValue() returns 1. Add 10 to get 11.
 
+bool isSplittable(deck_t hand) 
+{ 
+	if (SPLIT_BY_VALUE) return hand[0].rankValue() == hand[1].rankValue();
+	return hand[0].rankNumber() == hand[1].rankNumber(); 
+}
+
 std::string Card::suitString()
 {
 	switch (suit)
@@ -18,6 +24,7 @@ std::string Card::suitString()
 		return "spades";
 	}
 }
+
 constexpr int Card::rankValue()
 {
 	switch (rank)
@@ -142,12 +149,6 @@ void printCard(Card* card)
 	}
 }
 
-void showGameHand(const deck_t& hand)
-{
-	printDeck(&hand);
-}
-
-
 void printDeck(const deck_t* deck)
 {
 	for (Card card : *deck)
@@ -157,16 +158,6 @@ void printDeck(const deck_t* deck)
 	}
 
 	std::cout << '\n';
-}
-
-void drawCard(deck_t* deck, deck_t* hand)
-{
-	hand->push_back(getCardFromTop(deck));
-}
-
-inline void HandInterface::drawCard(deck_t* deck)
-{
-	hand.push_back(getCardFromTop(deck));
 }
 
 int getHandValue(deck_t hand)
@@ -184,9 +175,9 @@ int getHandValue(deck_t hand)
 	}
 	if (hasAce && (value + ACE_ADDITONAL_VALUE) <= BUST_NUMBER)
 		value += ACE_ADDITONAL_VALUE;
+
 	return value;
 }
-
 int HandInterface::getHandValue()
 {
 	int value{ 0 };
@@ -204,6 +195,7 @@ int HandInterface::getHandValue()
 		value += ACE_ADDITONAL_VALUE;
 	return value;
 }
+
 bool HandInterface::checkBlackJack()
 {
 	if ((hand[0].rankValue() == 1 || hand[1].rankValue() == 1) && !(hand[0].rankValue() == 1 && hand[1].rankValue() == 1))
@@ -218,7 +210,7 @@ bool HandInterface::checkBlackJack()
 
 bool checkBust(deck_t hand)
 {
-	if (getHandValue(hand) > BUST_NUMBER)
+	if (getHandValue(hand) > BUST_NUMBER) // refactor to return expression instead of if
 		return true;
 	return false;
 
@@ -249,7 +241,7 @@ bool Dealer::AI(deck_t* deck)
 			return false;
 		}
 	
-		drawCard(deck);
+		hand.push_back(getCardFromTop(deck));
 		printf("\n\tDealer hand: ");
 		showFullHand();
 		std::cout << "\tDealer hand value : " << getHandValue() << '\n';
@@ -259,7 +251,7 @@ bool Dealer::AI(deck_t* deck)
 
 deck_t _makeDeck(int numDecks)
 {
-	// Many casinos use up to 8 - 10 decks to play BlackJack. numDecks will allow you to create a 52 card deck by default or 416 (8 deck) card deck.
+	// Many casinos use up to 1 - 10 decks to play BlackJack. numDecks will allow you to create a 52 card deck by default or 416 (8 deck) card deck.
 	constexpr auto allRanks = std::array{
 		Card::rank_t::ace,
 		Card::rank_t::two,
@@ -302,9 +294,15 @@ deck_t _makeDeck(int numDecks)
 
 void shuffleDeck(deck_t* deck)
 {
-	// shuffle 3 times to really get randomized deck.
-	static std::mt19937 mt1{rng() };
+	static std::mt19937 mt{rng() };
+	static std::mt19937 mt1{ rng() };
+	static std::mt19937 mt2{ rng() };
+
+	std::shuffle(deck->begin(), deck->end(), mt);
 	std::shuffle(deck->begin(), deck->end(), mt1);
+	std::reverse(deck->begin(), deck->end());
+	std::shuffle(deck->begin(), deck->end(), mt2);
+
 }
 
 Card getCardFromTop(deck_t* deck)

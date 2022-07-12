@@ -1,5 +1,4 @@
 #include "stdafx.h"
-
 #include "blackjack.h"
 
 int main()
@@ -9,9 +8,8 @@ int main()
 	//std::cin >> name;
 
 	BlackJack start(name);
-	start.Blackjack(1, true);
+	start.Blackjack(6);
 
 	getchar();
-
 }
 
