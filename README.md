@@ -1,16 +1,11 @@
 # Alex's BlackJack
+### Possible Improvements:
+Add the two other more common side bets: perfect pairs and 21+3
 
-### Todo:
+Implement my own shuffle deck function. Using std::shuffle, std::reverse, and my rng to shuffle the deck right now.
 
-Optimize code
 
-Implement all bets found in a real blackjack game including insurance and others.
+## Todos:
+Create graphics using OpenGL to play in an actual window instead of console.
 
 BlackJack Strategy Tester: Implement an AI that can perform BlackJack strategies and simulate the performance of these strategies.
-
-Test shuffle randomness and shuffle cards better if needed. Just using std::shuffle right now. For the strategy tester, if the shuffling is not completely random then the results may be skewed.
-
-
-## Bigger Todos:
-
-Create graphics using OpenGL to play in an actual window instead of console.
