@@ -44,7 +44,7 @@ void BlackJack::Blackjack(int decks)
 		{
 			// current deck loop
 			int outcome = playBlackJack(playerPtr, dealerPtr, deckPtr);
-			handleOutcomes(playerPtr, outcome);
+			handleOutcomes(playerPtr, dealerPtr, outcome);
 			
 			if (m_bank > m_highestBank)
 				m_highestBank = m_bank;
@@ -57,7 +57,6 @@ void BlackJack::Blackjack(int decks)
 				if (again != 1) {
 					END_GAME = true;
 				}
-
 			}
 		}
 		
@@ -92,6 +91,7 @@ int BlackJack::playBlackJack(Player* playerPtr, Dealer* dealerPtr, deck_t* deckP
 	clearDeck(playerPtr->split2);
 	playerPtr->split1Bet = 0;
 	playerPtr->split2Bet = 0;
+	m_insureBet = 0;
 
 	dealerPtr->clearHand();
 
@@ -109,6 +109,12 @@ int BlackJack::playBlackJack(Player* playerPtr, Dealer* dealerPtr, deck_t* deckP
 	printHand(dealerPtr);
 	printHand(playerPtr);
 	printf("\tPlayer hand value: %i\n", playerPtr->getHandValue());
+
+	if (betsOn && dealerPtr->getHand()[0].rankNumber() == 1)
+	{
+		// if dealer face card is ace
+		insuranceBet();
+	}
 
 	if (betsOn)
 		printBet();
@@ -189,29 +195,51 @@ void BlackJack::bet()
 
 }
 
+void BlackJack::insuranceBet() 
+{
+	int insureBet{ 0 };
+	while (true) 
+	{
+		int choice = getInput<int>("\nDealer is showing an ace. Would you like to place an insurance? 1 for yes, 0 for no: ");
+		switch (choice) {
+		case 1:
+			insureBet = getInput<int>("\nPlease enter your insurance bet amount: ");
+			if (m_bank < m_bet + insureBet)
+			{
+				printf("\nYou cannot afford this insurance bet.\n");
+				continue;
+			}
+			if (insureBet > static_cast<int>(std::round(m_bet / 2))) {
+				printf("\nThe maximum value for an insurance bet is half your original stake.\n");
+				continue;
+			}
+			m_insureBet = insureBet;
+			return;
+		case 0:
+			printf("\nNo insurance bet placed.");
+			return;
+		default:
+			printf("\tInvalid Input.\n");
+			continue;
+		}
+	}
+
+}
+
 int BlackJack::handleBlackjacks(Player* playerPtr, Dealer* dealerPtr)
 {
 	// Return 0 if no blackJacks. 1 if player, 2 if dealer, 3 if draw
 
 	if (playerPtr->checkBlackJack())
 	{
-		if (dealerPtr->dealerFaceCardValue() == 1)
+		if (dealerPtr->checkBlackJack())
 		{
-			// If dealer showing ace
-			if(betsOn)
-				printf("\nSome special bet goes here.\n");
-			if (dealerPtr->checkBlackJack())
-			{
-				printf("\nDealer also has blackjack.\n");
-				return PUSH; // if draw?
-				// add this feature later. Not important for simple game.
-			}
+			printf("\nDealer also has blackjack.\n");
+			return PUSH; // if draw?
 		}
-		else
-		{
-			return PLAYER_BLACKJACK;
-		}
+		return PLAYER_BLACKJACK;
 	}
+
 	if (dealerPtr->checkBlackJack())
 	{
 		printf("\n\tBlackjack: ");
@@ -375,10 +403,10 @@ int BlackJack::determineSplits(Player* playerPtr, Dealer* dealerPtr, deck_t* dec
 		}
 
 	
-	handleOutcomes(playerPtr, firstOutcome);
-	handleOutcomes(playerPtr, secondOutcome, true);
+	handleOutcomes(playerPtr, dealerPtr ,firstOutcome);
+	handleOutcomes(playerPtr,dealerPtr, secondOutcome, true);
 	if (!playerPtr->split1.empty() && !playerPtr->split2.empty())
-		handleOutcomes(playerPtr, thirdOutcome, false, true);
+		handleOutcomes(playerPtr,dealerPtr, thirdOutcome, false, true);
 
 
 
@@ -390,12 +418,12 @@ int whoWon(deck_t& playerHand, Dealer* dealerPtr)
 {
 	if (getHandValue(playerHand )> dealerPtr->getHandValue())
 		return PLAYER_WINS;
-	if (dealerPtr->getHandValue() > getHandValue(playerHand))
+	else if (dealerPtr->getHandValue() > getHandValue(playerHand))
 		return DEALER_WINS;
 	return PUSH;
 }
 
-void BlackJack::handleOutcomes(Player* playerPtr, int outcome, bool split1, bool split2)
+void BlackJack::handleOutcomes(Player* playerPtr,Dealer* dealerPtr, int outcome, bool split1, bool split2)
 {
 	switch (outcome)
 	{
@@ -404,7 +432,7 @@ void BlackJack::handleOutcomes(Player* playerPtr, int outcome, bool split1, bool
 		if (betsOn && !(split1 || split2))
 		{
 			printf("\n\t%s wins $%i!\n", m_name.c_str(), m_bet);
-			m_bank += m_bet;
+			m_bank += m_bet - m_insureBet;
 		}
 		else if (betsOn && split1)
 		{
@@ -426,7 +454,7 @@ void BlackJack::handleOutcomes(Player* playerPtr, int outcome, bool split1, bool
 		if (betsOn && !(split1 || split2))
 		{
 			printf("\n\tDealer wins! %s lost $%i!\n", m_name.c_str(), m_bet);
-			m_bank -= m_bet;
+			m_bank -= m_bet - m_insureBet;
 		}
 		else if (betsOn && split1) {
 			printf("\n\tDealer wins on split 1! %s lost $%i!\n", m_name.c_str(), playerPtr->split1Bet);
@@ -443,8 +471,18 @@ void BlackJack::handleOutcomes(Player* playerPtr, int outcome, bool split1, bool
 		break;
 	case PUSH:
 		m_pushes++;
-		if (betsOn)
+		if (playerPtr->checkBlackJack() && dealerPtr->checkBlackJack() && m_insureBet > 0) {
+			// if player places insurance bet while dealer and player both have Blackjack, pay up
+			printf("%s did well making %i on their insurance bet!", m_name.c_str(), static_cast<int>(m_insureBet * INSURANCE_PAYOUT_RATE));
+			m_bank += static_cast<int>(m_insureBet * INSURANCE_PAYOUT_RATE);
+		}
+		else 
+		{
+			m_bank -= m_insureBet;
+		}
+		if (betsOn) {
 			printf("\n\tDraw! Returned $%i.\n", m_bet);
+		}
 		else
 			printf("\n\tDraw!\n");
 		break;
@@ -465,6 +503,11 @@ void BlackJack::handleOutcomes(Player* playerPtr, int outcome, bool split1, bool
 		if (betsOn)
 			m_bank -= m_bet;
 		printf("\n\tBlackjack for the dealer!\n");
+		if (m_insureBet > 0) 
+		{
+			printf("%s did well making %i on their insurance bet!", m_name.c_str(), static_cast<int>(m_insureBet * INSURANCE_PAYOUT_RATE));
+			m_bank += static_cast<int>(m_insureBet * INSURANCE_PAYOUT_RATE);
+		}
 
 	case SPLIT_DECIDED:
 		break;
@@ -478,7 +521,13 @@ void printHand(HandInterface* hand)
 	hand->showGameHand();
 }
 
-void BlackJack::printBet() { printf("\nTotal Bet: $%i\n", m_bet); }
+void BlackJack::printBet() 
+{ 
+	printf("\nHand Stake: $%i", m_bet);
+	if(m_insureBet > 0){
+		printf("  |  Insurance bet: %i", m_insureBet);
+	}
+}
 
 template<typename T>
 T getInput(std::string message)

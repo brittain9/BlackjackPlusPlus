@@ -294,6 +294,7 @@ deck_t _makeDeck(int numDecks)
 
 void shuffleDeck(deck_t* deck)
 {
+	// I haven't found 1 std::shuffle to be quite good enough to completely shuffle a deck. Maybe overkill, might write my own shuffleDeck function.
 	static std::mt19937 mt{rng() };
 	static std::mt19937 mt1{ rng() };
 	static std::mt19937 mt2{ rng() };
