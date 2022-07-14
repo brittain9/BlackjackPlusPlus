@@ -227,7 +227,7 @@ bool HandInterface::checkBust()
 bool Dealer::AI(deck_t* deck)
 {
 	// Return true if dealer busts, false if not.
-
+	printf("\nDealers turn.");
 	printf("\n\tDealer hand: ");
 	showFullHand();
 	while(true)

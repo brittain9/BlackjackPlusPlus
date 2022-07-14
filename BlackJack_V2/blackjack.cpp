@@ -37,7 +37,7 @@ void BlackJack::Blackjack(int decks)
 	Dealer* dealerPtr{ new Dealer() };
 	Player* playerPtr{ new Player() };
 
-	while(!END_GAME && m_bank > 0)
+	while (!END_GAME && m_bank > 0)
 	{
 		// Main game loop
 		while (!END_GAME && m_bank > 0 && deckPtr->size() > MIN_CARDS_BEFORE_NEW)
@@ -45,11 +45,11 @@ void BlackJack::Blackjack(int decks)
 			// current deck loop
 			int outcome = playBlackJack(playerPtr, dealerPtr, deckPtr);
 			handleOutcomes(playerPtr, dealerPtr, outcome);
-			
+
 			if (m_bank > m_highestBank)
 				m_highestBank = m_bank;
 
-			if(m_bank < 0)
+			if (m_bank < 0)
 				printf("\nYou went broke.");
 
 			if (!betsOn) {
@@ -59,7 +59,7 @@ void BlackJack::Blackjack(int decks)
 				}
 			}
 		}
-		
+
 		// when deck gets too small. Loop breaks and creates new deck.
 		if (deckPtr->size() < MIN_CARDS_BEFORE_NEW)
 		{
@@ -71,16 +71,16 @@ void BlackJack::Blackjack(int decks)
 			shuffleDeck(deckPtr);
 			shuffleDeck(deckPtr);
 			shuffleDeck(deckPtr);
+
 		}
+
+		printf("\nPress enter to see game stats");
+		// if we stop playing free the memory.
+		delete deckPtr;
+		delete playerPtr;
+		delete dealerPtr;
 	}
-
-	printf("\nPress enter to see game stats");
-	// if we stop playing free the memory.
-	delete deckPtr; 
-	delete playerPtr;
-	delete dealerPtr;
 }
-
 int BlackJack::playBlackJack(Player* playerPtr, Dealer* dealerPtr, deck_t* deckPtr)
 {
 	// Returns outcome as an int.
@@ -173,12 +173,21 @@ void BlackJack::bet()
 				printf("\nYou don't have a last bet.\n");
 				continue;
 			}
+			if (m_lastBet > m_bank) {
+				printf("\nYou're too poor to bet your last bet.");
+				continue;
+					
+			}
 			m_bet = m_lastBet;
 			break;
 		case 2:
 			if (m_lastBet == 0)
 			{
 				printf("\nYou don't have a last bet.\n");
+				continue;
+			}
+			if (static_cast<int>(std::round(m_lastBet / 2) > m_bank)) {
+				printf("\nYou're too poor to bet even half of your last bet.");
 				continue;
 			}
 			m_bet = static_cast<int>(std::round(m_lastBet / 2));
@@ -316,7 +325,7 @@ void BlackJack::getPlayerInput(Player* playerPtr, Dealer* dealerPtr ,deck_t& pla
 			}
 			if (m_bank < m_bet * 2 + playerPtr->split1Bet + playerPtr->split2Bet)
 			{
-				printf("\nYou don't have enough money to place your bet on another hand.");
+				printf("\nYou don't have enough money to place your bet on another hand.\n");
 				continue;
 			}
 
@@ -346,16 +355,19 @@ void BlackJack::getPlayerInput(Player* playerPtr, Dealer* dealerPtr ,deck_t& pla
 
 			playerhand[1] = getCardFromTop(deckPtr); // set second card from first hand to next card from deck
 
-			printf("\n\tFirst hand: ");
-			printDeck(&playerhand);
-			getPlayerInput(playerPtr, dealerPtr, playerhand, deckPtr, splitAces, true);
+			if (!playerPtr->split1.empty() && playerPtr->split2.empty())
+			{
+				printf("\n\tFirst hand: ");
+				printDeck(&playerhand);
+				getPlayerInput(playerPtr, dealerPtr, playerhand, deckPtr, splitAces, true);
+			}
 			if (!playerPtr->split1.empty() && playerPtr->split2.empty()) 
 			{
 				printf("\n\tSecond hand: ");
 				printDeck(&playerPtr->split1);
 				getPlayerInput(playerPtr, dealerPtr, playerPtr->split1, deckPtr, splitAces, true);
 			}
-			if (!playerPtr->split1.empty() && !playerPtr->split2.empty()) 
+			else if (!playerPtr->split1.empty() && !playerPtr->split2.empty()) 
 			{
 				printf("\n\tThird hand: ");
 				printDeck(&playerPtr->split2);
@@ -523,7 +535,7 @@ void printHand(HandInterface* hand)
 
 void BlackJack::printBet() 
 { 
-	printf("\nHand Stake: $%i", m_bet);
+	printf("\nTotal bet: $%i", m_bet);
 	if(m_insureBet > 0){
 		printf("  |  Insurance bet: %i", m_insureBet);
 	}
