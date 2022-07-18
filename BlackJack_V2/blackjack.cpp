@@ -40,7 +40,7 @@ void BlackJack::Blackjack(int decks)
 	while (!END_GAME && m_bank > 0)
 	{
 		// Main game loop
-		while (!END_GAME && m_bank > 0 && deckPtr->size() > MIN_CARDS_BEFORE_NEW)
+		while (!END_GAME && m_bank > 0)
 		{
 			// current deck loop
 			int outcome = playBlackJack(playerPtr, dealerPtr, deckPtr);
@@ -58,21 +58,24 @@ void BlackJack::Blackjack(int decks)
 					END_GAME = true;
 				}
 			}
+			// when deck gets too small.
+			if (deckPtr->size() < MIN_CARDS_BEFORE_NEW)
+			{
+				/*In a real game, when cards remaining = 0, cards reshuffled and continue playing.
+				I could check if the deck is empty each time a card is dealt, and if it is create a new deck
+				Right now this works.
+				*/
+				delete deckPtr; // delete old deck
+				deckPtr = new deck_t(_makeDeck(decks));
+				printf("\nCreated new deck.\n");
+				// four shuffles for consistency
+				shuffleDeck(deckPtr);
+				shuffleDeck(deckPtr);
+				shuffleDeck(deckPtr);
+				shuffleDeck(deckPtr);
+			}
 		}
 
-		// when deck gets too small. Loop breaks and creates new deck.
-		if (deckPtr->size() < MIN_CARDS_BEFORE_NEW)
-		{
-			delete deckPtr; // delete old deck
-			deckPtr = new deck_t(_makeDeck(decks));
-			printf("\nCreated new deck.\n");
-			// four shuffles for consistency
-			shuffleDeck(deckPtr);
-			shuffleDeck(deckPtr);
-			shuffleDeck(deckPtr);
-			shuffleDeck(deckPtr);
-
-		}
 
 		printf("\nPress enter to see game stats");
 		// if we stop playing free the memory.
@@ -81,6 +84,7 @@ void BlackJack::Blackjack(int decks)
 		delete dealerPtr;
 	}
 }
+
 int BlackJack::playBlackJack(Player* playerPtr, Dealer* dealerPtr, deck_t* deckPtr)
 {
 	// Returns outcome as an int.

@@ -141,12 +141,12 @@ public: // make public for now
 	int split2Bet = 0;
 public:
 
-	 void showGameHand() override
+	void showGameHand() override
 	 {
 		 printDeck(&hand);
 	 }
 
-	 bool AI(deck_t* deck) override { return true; } // not implemented.
+	bool AI(deck_t* deck) override { return true; }
 
 	std::string classString() override { return "Player"; };
 
