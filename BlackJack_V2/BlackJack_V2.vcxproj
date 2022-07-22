@@ -139,18 +139,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="card.h" />
-    <ClInclude Include="blackjack.h" />
-    <ClInclude Include="settings.h" />
-    <ClInclude Include="rng.h" />
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="timer.h" />
+    <ClInclude Include="src\card.h" />
+    <ClInclude Include="src\blackjack.h" />
+    <ClInclude Include="src\settings.h" />
+    <ClInclude Include="src\rng.h" />
+    <ClInclude Include="src\stdafx.h" />
+    <ClInclude Include="src\timer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="card.cpp" />
-    <ClCompile Include="blackjack.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="src\card.cpp" />
+    <ClCompile Include="src\blackjack.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

@@ -23,11 +23,11 @@ enum choices
 
 bool END_GAME{ false };
 
-void BlackJack::Blackjack(int decks)
+void BlackJack::Blackjack()
 {
 	// Main game loop. Create deck, dealer, players, and cleanup.
 
-	deck_t* deckPtr{ new deck_t(_makeDeck(decks)) };
+	deck_t* deckPtr{ new deck_t(_makeDeck()) };
 
 	shuffleDeck(deckPtr);
 	shuffleDeck(deckPtr);
@@ -37,53 +37,33 @@ void BlackJack::Blackjack(int decks)
 	Dealer* dealerPtr{ new Dealer() };
 	Player* playerPtr{ new Player() };
 
+
+	// Main game loop
 	while (!END_GAME && m_bank > 0)
 	{
-		// Main game loop
-		while (!END_GAME && m_bank > 0)
-		{
-			// current deck loop
-			int outcome = playBlackJack(playerPtr, dealerPtr, deckPtr);
-			handleOutcomes(playerPtr, dealerPtr, outcome);
+		int outcome = playBlackJack(playerPtr, dealerPtr, deckPtr);
+		handleOutcomes(playerPtr, dealerPtr, outcome);
 
-			if (m_bank > m_highestBank)
-				m_highestBank = m_bank;
+		if (m_bank > m_highestBank)
+			m_highestBank = m_bank;
 
-			if (m_bank < 0)
-				printf("\nYou went broke.");
+		if (m_bank < 0)
+			printf("\nYou went broke.");
 
-			if (!betsOn) {
-				int again = getInput<int>("\nEnter 1 to play again: ");
-				if (again != 1) {
-					END_GAME = true;
-				}
-			}
-			// when deck gets too small.
-			if (deckPtr->size() < MIN_CARDS_BEFORE_NEW)
-			{
-				/*In a real game, when cards remaining = 0, cards reshuffled and continue playing.
-				I could check if the deck is empty each time a card is dealt, and if it is create a new deck
-				Right now this works.
-				*/
-				delete deckPtr; // delete old deck
-				deckPtr = new deck_t(_makeDeck(decks));
-				printf("\nCreated new deck.\n");
-				// four shuffles for consistency
-				shuffleDeck(deckPtr);
-				shuffleDeck(deckPtr);
-				shuffleDeck(deckPtr);
-				shuffleDeck(deckPtr);
+		if (!betsOn) {
+			int again = getInput<int>("\nEnter 1 to play again: ");
+			if (again != 1) {
+				END_GAME = true;
 			}
 		}
-
-
-		printf("\nPress enter to see game stats");
-		// if we stop playing free the memory.
-		delete deckPtr;
-		delete playerPtr;
-		delete dealerPtr;
 	}
+	printf("\nPress enter to see game stats");
+
+	delete deckPtr;
+	delete playerPtr;
+	delete dealerPtr;
 }
+
 
 int BlackJack::playBlackJack(Player* playerPtr, Dealer* dealerPtr, deck_t* deckPtr)
 {
@@ -105,10 +85,13 @@ int BlackJack::playBlackJack(Player* playerPtr, Dealer* dealerPtr, deck_t* deckP
 		bet();
 	}
 	if (END_GAME)
-		return SPLIT_DECIDED; // in handleOutcomes this option just breaks
+		return SPLIT_DECIDED;
 
-	playerPtr->setStartingHand(deckPtr);
-	dealerPtr->setStartingHand(deckPtr);
+	// Deal 1 card to player, then dealer, then player, then dealer
+	playerPtr->hand.push_back(getCardFromTop(deckPtr));
+	dealerPtr->hand.push_back(getCardFromTop(deckPtr));
+	playerPtr->hand.push_back(getCardFromTop(deckPtr));
+	dealerPtr->hand.push_back(getCardFromTop(deckPtr));
 
 	printHand(dealerPtr);
 	printHand(playerPtr);

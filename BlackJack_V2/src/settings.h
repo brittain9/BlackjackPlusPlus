@@ -35,7 +35,7 @@ constexpr int STARTING_BANK = 1000;
 constexpr float BLACKJACK_PAYOUT_RATE = 1.5f; // 3:2 payout for blackjacks
 constexpr float INSURANCE_PAYOUT_RATE = 2.0f;
 
-constexpr int DEFAULT_NUM_DECKS = 8; // Deck * 52 = number of cards in deck. Casinos use 52 to 416 cards to play Blackjack
+constexpr int NUM_DECKS = 1; // Deck * 52 = number of cards in deck. Casinos use 52 to 416 cards to play Blackjack
 constexpr int BUST_NUMBER = 21; // Anything above this is bust. Can change.
 
 constexpr int DEALER_STAND = 17;

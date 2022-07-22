@@ -14,7 +14,7 @@ class Dealer;
 typedef std::vector<Card> deck_t;
 
 //Declarations
-deck_t _makeDeck(int numDecks = DEFAULT_NUM_DECKS);
+deck_t _makeDeck();
 void shuffleDeck(deck_t* deck);
 void printDeck(const deck_t* deck);
 
@@ -75,7 +75,7 @@ public:
 		return *this;
 	}
 
-	friend deck_t _makeDeck(int numDecks);
+	friend deck_t _makeDeck();
 	friend void printCard(const Card& card);
 	friend void printCard(Card* card);
 
@@ -86,16 +86,14 @@ public:
 
 class HandInterface
 {
-protected:
-	deck_t hand;
 public:
+	deck_t hand;
 	deck_t& getHand() { return hand; }
 	int getHandValue();
 
 	bool checkBust(); // Return true if busted
 	bool checkBlackJack(); // Return true if BlackJack
 
-	void setStartingHand(deck_t* deck) { hand.push_back(getCardFromTop(deck)); hand.push_back(getCardFromTop(deck)); }
 	void clearHand() { hand.clear(); }
 
 	// Pure virtual function
@@ -141,17 +139,13 @@ public: // make public for now
 	int split2Bet = 0;
 public:
 
-	void showGameHand() override
-	 {
-		 printDeck(&hand);
-	 }
+	void showGameHand() override { printDeck(&hand); }
 
-	bool AI(deck_t* deck) override { return true; }
+	bool AI(deck_t* deck) override { return true; } // not implemented
 
 	std::string classString() override { return "Player"; };
 
 	void setHand(deck_t newHand) {hand = newHand;}
-
 
 	deck_t getSplit1() { return split1; }
 

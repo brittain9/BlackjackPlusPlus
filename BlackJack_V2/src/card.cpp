@@ -245,11 +245,10 @@ bool Dealer::AI(deck_t* deck)
 		printf("\n\tDealer hand: ");
 		showFullHand();
 		std::cout << "\tDealer hand value : " << getHandValue() << '\n';
-		
 	}
 }
 
-deck_t _makeDeck(int numDecks)
+deck_t _makeDeck()
 {
 	// Many casinos use up to 1 - 10 decks to play BlackJack. numDecks will allow you to create a 52 card deck by default or 416 (8 deck) card deck.
 	constexpr auto allRanks = std::array{
@@ -277,7 +276,7 @@ deck_t _makeDeck(int numDecks)
 
 	deck_t deck{};
 
-	for(int i{0}; i < numDecks; i++)
+	for(int i{0}; i < NUM_DECKS; i++)
 	{
 		for (auto&& rank : allRanks)
 		{
@@ -308,6 +307,20 @@ void shuffleDeck(deck_t* deck)
 
 Card getCardFromTop(deck_t* deck)
 {
+	// Check if deck is empty.
+	if(deck->empty())
+	{
+		// if deck is empty, create new deck
+		std::cout << "\nAll cards have been used. Reshuffling.";
+		delete deck; // delete old deck
+		deck = new deck_t(_makeDeck());
+		printf("\nCreated new deck.\n");
+		// four shuffles for consistency
+		shuffleDeck(deck);
+		shuffleDeck(deck);
+		shuffleDeck(deck);
+		shuffleDeck(deck);
+	}
 	Card returnCard = deck->at(0); // return first card from deck.
 	deck->erase(deck->begin()); // remove that card from deck
 	return returnCard; // After player is done with the card, card should be added back to deck. Then next turn deck reshuffled.

@@ -8,8 +8,9 @@ int main()
 	//std::cin >> name;
 
 	BlackJack start(name);
-	start.Blackjack(6);
+	start.Blackjack();
 
-	getchar();
+	char a = getchar();
 }
+
 

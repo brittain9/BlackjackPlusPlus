@@ -26,7 +26,7 @@ public:
 	~BlackJack()
 	{ printf("\n\tPlayer wins: %i\tDealer Wins: %i\tPushes: %i\tPlayer Blackjacks: %i\tDealer Blackjacks: %i\n\tHighest Bank: $%i\tProfit: $%i\n\n", m_playerWins, m_dealerWins, m_pushes,m_playerBlackjacks, m_dealerBlackjacks,m_highestBank, m_bank - STARTING_BANK); }
 
-	void Blackjack(int decks = DEFAULT_NUM_DECKS);
+	void Blackjack();
 	int playBlackJack(Player* playerPtr, Dealer* dealerPtr, deck_t* deckPtr);
 	void bet();
 	void insuranceBet();
