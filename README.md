@@ -7,6 +7,7 @@ Implement my own shuffle deck function. Using std::shuffle, std::reverse, and my
 Clean up console UI. It's perfectly playable and looks okay but could use a nice overhaul. Don't want to do though because I want to learn OpenGL.
 
 ## Todos:
-Create graphics using OpenGL to play in an actual window instead of console.
+~Create graphics using OpenGL to play in an actual window instead of console.~
+Ported BlackjackPlusPlus to BlackjackSharp. If I do create a GUI for Blackjack, I would use C# and Unity.
 
 BlackJack Strategy Tester: Implement an AI that can perform BlackJack strategies and simulate the performance of these strategies.
